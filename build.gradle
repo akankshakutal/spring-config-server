@@ -1,0 +1,149 @@
+buildscript {
+    ext {
+        dockerImagePrefix = 'artifactory.axisb.com/docker/'
+    }
+    repositories {
+        maven {
+            credentials {
+                username = mavenUser
+                password = mavenPassword
+            }
+            url "https://artifactory.axisb.com/artifactory/maximus-maven-apache"
+        }
+        maven {
+            credentials {
+                username = mavenUser
+                password = mavenPassword
+            }
+            url "https://artifactory.axisb.com/artifactory/maven-gradle-plugin"
+        }
+        maven {
+            credentials {
+                username = mavenUser
+                password = mavenPassword
+            }
+            url "https://artifactory.axisb.com/artifactory/libs-release"
+        }
+    }
+    dependencies {
+        classpath("com.axis.lending:parent-gradle:latest.release")
+    }
+}
+
+apply plugin: 'gradleParentPlugin'
+
+group 'com.axis.lending'
+version '1.0-SNAPSHOT'
+sourceCompatibility = 1.8
+
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "1.8"
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "1.8"
+    }
+}
+
+test {
+    finalizedBy jacocoTestCoverageVerification
+    useJUnitPlatform()
+    testLogging {
+        events 'PASSED', 'FAILED', 'SKIPPED'
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+def coverageExcludes = ['**/Application**']
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: coverageExcludes)
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: coverageExcludes)
+        }))
+    }
+    violationRules {
+        rule {
+            limit {
+                counter = 'INSTRUCTION'
+                value = 'COVEREDRATIO'
+                minimum = 0.95
+            }
+        }
+        rule {
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+repositories {
+    maven {
+        credentials {
+            username = mavenUser
+            password = mavenPassword
+        }
+        url "https://artifactory.axisb.com/artifactory/maximus-maven-apache"
+    }
+    maven {
+        credentials {
+            username = mavenUser
+            password = mavenPassword
+        }
+        url "https://artifactory.axisb.com/artifactory/libs-release"
+    }
+    maven {
+        credentials {
+            username = mavenUser
+            password = mavenPassword
+        }
+        url "https://artifactory.axisb.com/artifactory/maximus-gradle-local"
+    }
+    maven {
+        credentials {
+            username = mavenUser
+            password = mavenPassword
+        }
+        url "https://artifactory.axisb.com/artifactory/maximus-jitpack"
+    }
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation('org.springframework.cloud:spring-cloud-config-server:3.0.0')
+    implementation('org.springframework.cloud:spring-cloud-starter-config:3.0.0')
+}
+
+task unpack(type: Copy) {
+    dependsOn bootJar
+    from(zipTree(tasks.bootJar.outputs.files.singleFile))
+    into("build/dependency")
+}
+
+docker {
+    name "${dockerImagePrefix}${bootJar.baseName}"
+    copySpec.from(tasks.unpack.outputs).into("dependency")
+    buildArgs(['DEPENDENCY': "dependency"])
+}

@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: spring-config-sever
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/akankshakutal/config-properties
+server:
+  port: 8888
