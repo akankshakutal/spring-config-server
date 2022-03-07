@@ -1,10 +1,42 @@
 spring:
   application:
     name: spring-config-sever
+  profiles:
+    active: composite
+  kafka:
+    bootstrap-servers: http://localhost:9093
   cloud:
+    stream:
+        kafka:
+            binder:
+                autoAddPartitions: true
+    bus:
+        enabled: true
     config:
       server:
-        git:
-          uri: https://github.com/akankshakutal/config-properties
+        composite:
+        -
+          type: git
+          cloneOnStart: true
+          searchPaths: 'configurations'
+          uri: /Users/akankshakutal/Downloads/helloworld
+        -
+          type: git
+          cloneOnStart: true
+          searchPaths: 'configurations'
+          uri: /Users/akankshakutal/Downloads/helloaxis
+        -
+          type: git
+          cloneOnStart: true
+          uri: /Users/akankshakutal/projects/axis/config-properties
+
 server:
   port: 8888
+management:
+  server:
+    port: 8889
+  endpoints:
+    enabled-by-default: true
+    web:
+      exposure:
+        include: "*"
