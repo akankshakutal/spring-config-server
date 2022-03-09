@@ -19,16 +19,16 @@ spring:
           type: git
           cloneOnStart: true
           searchPaths: 'configurations'
-          uri: /Users/akankshakutal/Downloads/helloworld
+          uri: https://github.com/akankshakutal/helloworld.git
         -
           type: git
           cloneOnStart: true
           searchPaths: 'configurations'
-          uri: /Users/akankshakutal/Downloads/helloaxis
+          uri: https://github.com/akankshakutal/helloaxis.git
         -
           type: git
           cloneOnStart: true
-          uri: /Users/akankshakutal/projects/axis/config-properties
+          uri: https://github.com/akankshakutal/config-properties.git
 
 server:
   port: 8888
